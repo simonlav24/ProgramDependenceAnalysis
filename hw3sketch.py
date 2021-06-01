@@ -6,6 +6,7 @@ import subprocess
 
 ENTRY = "'Entry'"
 EXIT = "'Exit'"
+INFINITY = 1000
 
 class Instruction:
 	def __init__(self, opcode, dst, p1, p2):
@@ -37,22 +38,36 @@ class Instruction:
 	def __repr__(self):
 		return str(self)
 
+class Node:
+	def __init__(self, index):
+		self.index = index
+		self.edges = []
+	def __str__(self):
+		return "(" + str(self.index) + ")-> " + str(self.edges)
+	def __repr__(self):
+		return str(self)
+		
+class Edge:
+	def __init__(self, source, dest, weight):
+		self.source = source
+		self.dest = dest
+		self.weight = weight
+	def __str__(self):
+		string = ""
+		return "(" + str(self.dest) + ", " + str(self.weight) + ")"
+	def __repr__(self):
+		return str(self)
 
 def copy2clip(string):
 	cmd = 'echo | set /p=' + string.strip() + '|clip'
 	return subprocess.check_call(cmd, shell=True)
 
 
-def main():
-	opcodeData = sys.argv[1]
-	program = sys.argv[2]
-	commands = sys.argv[3:]
+
+def analyzeProg(opsLatencyFile, progTrace, numOfInsts):
 	
-	# print("#############################################")
-	# print("# Opcode data file:", opcodeData)
-	# print("# Program file:    ", program)
-	# print("# commands:        ", commands)
-	# print("#############################################")
+	
+
 
 	# create instructions array and add "Entry"
 	programCounter = []
@@ -60,7 +75,7 @@ def main():
 	opcodes = []
 	
 	# read instructions file and add to array
-	with open(program, 'r') as fileProgram:
+	with open(progTrace, 'r') as fileProgram:
 		for line in fileProgram:
 			if line[0] == '#':
 				continue
@@ -70,7 +85,7 @@ def main():
 	programCounter.append(Instruction(EXIT, "", "", ""))
 	
 	# read opcodes cycles and calculate to instructions
-	with open(opcodeData) as fileOpcode:
+	with open(opsLatencyFile) as fileOpcode:
 		for line in fileOpcode:
 			opcodes.append(int(line))
 	for i in programCounter:
@@ -105,15 +120,106 @@ def main():
 		for d in pc.dependencies:
 			edges.append((i, d))
 	
+	# output to visualization via graphNode.py
 	string = "D:\python\graphNode.py " + str([programCounter, edges]).replace(" ", "")
-	print(string)
+	# print(string)
 	copy2clip(string)
+	
+	# create handle
+	handle = [None] * len(programCounter)
+	for i, instruction in enumerate(programCounter):
+		node = Node(i - 1)
+		for edge in instruction.dependencies:
+			e = Edge(i - 1, edge - 1, programCounter[edge].cycles)
+			node.edges.append(e)
+		handle[i] = node
+	
+	# for i in handle:
+		# print(i)
+	
+	return handle
+
+def getInstDeps(ctx, theInst, src1DepInst, src2DepInst):
+	for i in ctx:
+		if int(i.index) == theInst:
+			if len(i.edges) == 0:
+				src1DepInst[0] = -1
+				src2DepInst[0] = -1
+			if len(i.edges) == 1:
+				src1DepInst[0] = i.edges[0].dest
+				src2DepInst[0] = -1
+			if len(i.edges) == 2:
+				src1DepInst[0] = i.edges[0].dest
+				src2DepInst[0] = i.edges[1].dest
+			break
+	print("getInstDeps(" + str(theInst) + ")==" + "{" + str(src1DepInst[0]) + "," + str(src2DepInst[0]) + "}")
+
+
+def findShortestPath(handle, source):
+	d = [INFINITY] * len(handle)
+	d[source] = 0
+
+	for i in range(len(handle) - 1):
+		# initialize current distance
+		d_current = d.copy()
+		# iterate edges:
+		for i in handle:
+			for edge in i.edges:
+				# relaxation
+				if d[edge.source + 1] + (-1) * edge.weight < d_current[edge.dest + 1]:
+					d_current[edge.dest + 1] = d[edge.source + 1] + (-1) * edge.weight
+		d = d_current
+		# print(d_current)
+		
+	return (-1) * d_current[0]
+
+def getProgDepth(handle):
+	pathLength = findShortestPath(handle, -1)
+	print("getProgDepth()==" + str(pathLength))
+
+def getInstDepth(handle, inst):
+	pathLength = findShortestPath(handle, inst + 1)
+	print("getDepDepth(" + str(inst) + ")==" + str(pathLength))
 
 if __name__ == "__main__":
-	main()
 
+	opsLatencyFile = sys.argv[1]
+	progTrace = sys.argv[2]
+	numOfInsts = sys.argv[3:]
+	
+	# print("#############################################")
+	# print("# Opcode data file:", opcodeData)
+	# print("# Program file:    ", program)
+	# print("# commands:        ", commands)
+	# print("#############################################")
 
+	handle = analyzeProg(opsLatencyFile, progTrace, numOfInsts)
+	
+	# for i in handle:
+		# print(i)
+	
+	
+	###./dflow_calc opcode1.dat example2.in p0 p10 p14 d4 d14
+	getProgDepth(handle)
+	
+	getInstDepth(handle, 0)
+	getInstDepth(handle, 10)
+	getInstDepth(handle, 14)
 
+	getInstDeps(handle, 4, [90],[90])
+	getInstDeps(handle, 14, [90],[90])
+	
+	
+	# getProgDepth(handle)
+	
+	# getInstDepth(handle, 0)
+	# getInstDepth(handle, 3)
+	# getInstDepth(handle, 5)
+	# getInstDepth(handle, 7)
+	# getInstDepth(handle, 9)
+
+	# getInstDeps(handle, 3, [90],[90])
+	# getInstDeps(handle, 9, [90],[90])
 
 
 
