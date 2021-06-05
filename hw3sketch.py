@@ -65,10 +65,6 @@ def copy2clip(string):
 
 
 def analyzeProg(opsLatencyFile, progTrace, numOfInsts):
-	
-	
-
-
 	# create instructions array and add "Entry"
 	programCounter = []
 	programCounter.append(Instruction(ENTRY, "", "", ""))
@@ -115,6 +111,8 @@ def analyzeProg(opsLatencyFile, progTrace, numOfInsts):
 		if not pc.pointed:
 			programCounter[-1].dependencies.append(i)
 	
+	
+	################################################## for visualization
 	# create edges of graph
 	for i, pc in enumerate(programCounter):
 		for d in pc.dependencies:
@@ -124,6 +122,8 @@ def analyzeProg(opsLatencyFile, progTrace, numOfInsts):
 	string = "D:\python\graphNode.py " + str([programCounter, edges]).replace(" ", "")
 	# print(string)
 	copy2clip(string)
+	##################################################
+	
 	
 	# create handle
 	handle = [None] * len(programCounter)
@@ -131,6 +131,7 @@ def analyzeProg(opsLatencyFile, progTrace, numOfInsts):
 		node = Node(i - 1)
 		for edge in instruction.dependencies:
 			e = Edge(i - 1, edge - 1, programCounter[edge].cycles)
+			print("weight", e.weight)
 			node.edges.append(e)
 		handle[i] = node
 	
@@ -159,12 +160,14 @@ def findShortestPath(handle, source):
 	d = [INFINITY] * len(handle)
 	d[source] = 0
 
-	for i in range(len(handle) - 1):
+	for j in range(len(handle) - 1):
 		# initialize current distance
 		d_current = d.copy()
+		# print(d_current)
 		# iterate edges:
 		for i in handle:
 			for edge in i.edges:
+				print(edge.source, edge.dest, edge.weight)
 				# relaxation
 				if d[edge.source + 1] + (-1) * edge.weight < d_current[edge.dest + 1]:
 					d_current[edge.dest + 1] = d[edge.source + 1] + (-1) * edge.weight
@@ -200,17 +203,17 @@ if __name__ == "__main__":
 	
 	
 	###./dflow_calc opcode1.dat example2.in p0 p10 p14 d4 d14
-	getProgDepth(handle)
-	
-	getInstDepth(handle, 0)
-	getInstDepth(handle, 10)
-	getInstDepth(handle, 14)
-
-	getInstDeps(handle, 4, [90],[90])
-	getInstDeps(handle, 14, [90],[90])
-	
-	
 	# getProgDepth(handle)
+	
+	# getInstDepth(handle, 0)
+	# getInstDepth(handle, 10)
+	# getInstDepth(handle, 14)
+
+	# getInstDeps(handle, 4, [90],[90])
+	# getInstDeps(handle, 14, [90],[90])
+	
+	
+	getProgDepth(handle)
 	
 	# getInstDepth(handle, 0)
 	# getInstDepth(handle, 3)
