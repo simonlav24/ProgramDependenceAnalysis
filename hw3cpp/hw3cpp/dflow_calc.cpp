@@ -10,18 +10,16 @@ using std::cout;
 using std::endl;
 
 #define DEPENDENCIES 2
-#define EMPTY -10001
-
-#define INF INT_MAX 
-/////////// change this to INT_MAX
-
-#define ENTRY -1002
+#define INF INT_MAX
+// arbitrary denoting empty, exit, entry
+#define EMPTY -101
+#define ENTRY -102
 #define EXIT -103
 
 #define DEBUG if(debug) cout << "[DEBUG] " 
-
 bool debug = false;
 
+// class for holding instruction data
 class Instruction {
 public:
     int opcode;
@@ -46,6 +44,7 @@ public:
         this->pointed = inst.pointed;
     }
 
+    // custom constructor
     void takeFrom(int opcode, int dst, int p1, int p2) {
         this->opcode = opcode;
         this->dst = dst;
@@ -56,15 +55,14 @@ public:
         pointed = false;
     }
 
-    void addDependencie(int num, int p) {
-        
+    // add dependencie
+    void addDependencie(int num, int p) {    
         while (dependencies.size() != 2)
             dependencies.push_back(EMPTY);
-      
         dependencies[p - 1] = num;
-
     }
 
+    // calculate cycles based on opcodes file
     void calculate(const unsigned int* data) {
         if (opcode == EXIT || opcode == ENTRY) {
             pointed = true;
@@ -74,19 +72,24 @@ public:
     }
 };
 
+// struct for edge in graph
 struct Edge {
-    int source;
+    int source; 
     int dest;
     int weight;
+    // num of source's parameter
     int param;
 };
 
+// struct for node in graph
 struct Node {
     int index;
     std::vector<Edge> edges;
+    // length of node array
     int length;
 };
 
+// printing for debugging
 void printHandle(Node* handle) {
     if (!debug) return;
     for (int i = 0; i < handle[0].length; i++) {
@@ -106,7 +109,7 @@ void copyArr(int* arr1, int* arr2, int length) {
     }
 }
 
-//print arr
+// printing for debugging
 void printArr(int* arr, int length) {
     if (!debug) return;
     DEBUG;
@@ -131,19 +134,16 @@ int findShortestPath(Node* handle, int source) {
     for (int j = 0; j < length - 1; j++) {
         // initialize current distance
         copyArr(d_current, d, length);
-        //printArr(d_current, length);
         // iterate edges
         for (int i = 0; i < length; i++) {
             for (unsigned int k = 0; k < handle[i].edges.size(); k++) {
                 Edge& edge = handle[i].edges[k];
-                //DEBUG << edge.source << " " << edge.dest << " " << edge.weight << endl;
-                // relaxation
+                // relaxation with negative weights (for finding heaviest path)
                 if (d[edge.source + 1] + (-1) * edge.weight < d_current[edge.dest + 1])
                     d_current[edge.dest + 1] = d[edge.source + 1] + (-1) * edge.weight;
             }
         }
         copyArr(d, d_current, length);
-        //printArr(d_current, length);
     }
 
     int result = (-1) * d_current[0];
@@ -167,25 +167,9 @@ ProgCtx analyzeProg(const unsigned int opsLatency[], const InstInfo progTrace[],
     // insert Exit
     programCounter[numOfInsts + 1].takeFrom(EXIT, 0, 0, 0);
 
-    if (debug) {
-        DEBUG << "opcodes ";
-        for (unsigned int i = 0; i < numOfInsts + 2; i++) {
-            cout << programCounter[i].opcode << " ";
-        }
-        cout << endl;
-    }
-
     // calculate cycles to instructions
     for (unsigned int i = 0; i < numOfInsts; i++) {
         programCounter[i + 1].calculate(opsLatency);
-    }
-
-    if (debug) {
-        DEBUG << "cycles ";
-        for (unsigned int i = 0; i < numOfInsts + 2; i++) {
-            cout << programCounter[i].cycles << " ";
-        }
-        cout << endl;
     }
 
     // calculate dependencies graph
@@ -235,19 +219,20 @@ ProgCtx analyzeProg(const unsigned int opsLatency[], const InstInfo progTrace[],
     for (int i = 0; i < totalInst; i++) {
         Node n;
         n.index = i - 1;
-        DEBUG << "size depen " << programCounter[i].dependencies.size() << endl;
         for (unsigned int edge = 0; edge < programCounter[i].dependencies.size(); edge++) {
             if (programCounter[i].dependencies[edge] == EMPTY) continue;
             Edge e;
+            // for convinience
             e.param = edge + 1;
+            // first node is Entry (index = -1)
             e.source = i - 1;
             e.dest = programCounter[i].dependencies[edge] - 1;
             e.weight = programCounter[programCounter[i].dependencies[edge]].cycles;
-            DEBUG << "dest " << e.dest << endl;
             n.edges.push_back(e);
         }
         handle[i] = n;
     }
+    // mark length of node array in first node
     handle[0].length = totalInst;
 
     delete[] destinations;
@@ -268,7 +253,7 @@ int getInstDepth(ProgCtx ctx, unsigned int theInst) {
     int totalInst = handle[0].length;
     if ((int)theInst >= totalInst - 2)
         return -1;
-
+    // find shortest path alg
     int pathLength = findShortestPath(handle, theInst + 1);
 
     return pathLength;
@@ -304,14 +289,13 @@ int getInstDeps(ProgCtx ctx, unsigned int theInst, int *src1DepInst, int *src2De
         }
     }
 
-
     return 0;
 }
 
 int getProgDepth(ProgCtx ctx) {
     Node* handle = (Node*)ctx;
     int totalInst = handle[0].length;
-    DEBUG << "length: " << totalInst << endl;
+    // find shortest path alg
     int pathLength = findShortestPath(handle, totalInst - 1);
 
     return pathLength;
