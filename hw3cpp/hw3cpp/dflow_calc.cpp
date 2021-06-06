@@ -9,12 +9,12 @@ using std::cout;
 using std::endl;
 
 #define DEPENDENCIES 2
-#define EMPTY -101
+#define EMPTY -10001
 
 #define INFINITY 1000 
 /////////// change this to INT_MAX
 
-#define ENTRY -102
+#define ENTRY -1002
 #define EXIT -103
 
 #define DEBUG if(debug) cout << "[DEBUG] " 
@@ -55,10 +55,17 @@ public:
         pointed = false;
     }
 
-    void addDependencie(int num) {
-        dependencies.push_back(num);
-        if(dependencies.size() > 2)
-            dependencies.erase(dependencies.begin());
+    void addDependencie(int num, int p) {
+        
+        while (dependencies.size() != 2)
+            dependencies.push_back(EMPTY);
+      
+        dependencies[p - 1] = num;
+        
+
+        //dependencies.push_back(num);
+        //if(dependencies.size() > 2)
+        //    dependencies.erase(dependencies.begin());
     }
 
     void calculate(const unsigned int* data) {
@@ -129,7 +136,7 @@ int findShortestPath(Node* handle, int source) {
         for (int i = 0; i < length; i++) {
             for (int k = 0; k < handle[i].edges.size(); k++) {
                 Edge& edge = handle[i].edges[k];
-                DEBUG << edge.source << " " << edge.dest << " " << edge.weight << endl;
+                //DEBUG << edge.source << " " << edge.dest << " " << edge.weight << endl;
                 // relaxation
                 if (d[edge.source + 1] + (-1) * edge.weight < d_current[edge.dest + 1])
                     d_current[edge.dest + 1] = d[edge.source + 1] + (-1) * edge.weight;
@@ -193,8 +200,13 @@ ProgCtx analyzeProg(const unsigned int opsLatency[], const InstInfo progTrace[],
         dependent = false;
         for (int j = 0; j < totalInst; j++) {
             int dest = destinations[j];
-            if (programCounter[i].param1 == dest || programCounter[i].param2 == dest) {
-                programCounter[i].addDependencie(j);
+            if (programCounter[i].param1 == dest) {
+                programCounter[i].addDependencie(j, 1);
+                programCounter[j].pointed = true;
+                dependent = true;
+            }
+            if (programCounter[i].param2 == dest) {
+                programCounter[i].addDependencie(j, 2);
                 programCounter[j].pointed = true;
                 dependent = true;
             }
@@ -207,7 +219,7 @@ ProgCtx analyzeProg(const unsigned int opsLatency[], const InstInfo progTrace[],
 
         // if not dependent then point to "Entry"
         if (!dependent)
-            programCounter[i].addDependencie(0);
+            programCounter[i].addDependencie(0, 1);
         destinations[i] = programCounter[i].dst;
     }
 
@@ -223,12 +235,14 @@ ProgCtx analyzeProg(const unsigned int opsLatency[], const InstInfo progTrace[],
     for (int i = 0; i < totalInst; i++) {
         Node n;
         n.index = i - 1;
+        DEBUG << "size depen " << programCounter[i].dependencies.size() << endl;
         for (int edge = 0; edge < programCounter[i].dependencies.size(); edge++) {
+            if (programCounter[i].dependencies[edge] == EMPTY) continue;
             Edge e;
             e.source = i - 1;
             e.dest = programCounter[i].dependencies[edge] - 1;
             e.weight = programCounter[programCounter[i].dependencies[edge]].cycles;
-            DEBUG << "weight " << e.weight << endl;
+            DEBUG << "dest " << e.dest << endl;
             n.edges.push_back(e);
         }
         handle[i] = n;
@@ -249,7 +263,13 @@ void freeProgCtx(ProgCtx ctx) {
 }
 
 int getInstDepth(ProgCtx ctx, unsigned int theInst) {
-    return -1;
+    Node* handle = (Node*)ctx;
+    int totalInst = handle[0].length;
+
+    int pathLength = findShortestPath(handle, theInst + 1);
+
+    return pathLength;
+    return 0;
 }
 
 int getInstDeps(ProgCtx ctx, unsigned int theInst, int *src1DepInst, int *src2DepInst) {

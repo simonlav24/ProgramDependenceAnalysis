@@ -119,7 +119,7 @@ def analyzeProg(opsLatencyFile, progTrace, numOfInsts):
 			edges.append((i, d))
 	
 	# output to visualization via graphNode.py
-	string = "D:\python\graphNode.py " + str([programCounter, edges]).replace(" ", "")
+	string = "graphNode.py " + str([programCounter, edges]).replace(" ", "")
 	# print(string)
 	copy2clip(string)
 	##################################################
