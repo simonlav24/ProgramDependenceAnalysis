@@ -4,6 +4,7 @@
 #include "dflow_calc.h"
 #include <iostream>
 #include <vector>
+#include <bits/stdc++.h>
 
 using std::cout;
 using std::endl;
@@ -11,7 +12,7 @@ using std::endl;
 #define DEPENDENCIES 2
 #define EMPTY -10001
 
-#define INFINITY 1000 
+#define INF INT_MAX 
 /////////// change this to INT_MAX
 
 #define ENTRY -1002
@@ -61,11 +62,7 @@ public:
             dependencies.push_back(EMPTY);
       
         dependencies[p - 1] = num;
-        
 
-        //dependencies.push_back(num);
-        //if(dependencies.size() > 2)
-        //    dependencies.erase(dependencies.begin());
     }
 
     void calculate(const unsigned int* data) {
@@ -81,6 +78,7 @@ struct Edge {
     int source;
     int dest;
     int weight;
+    int param;
 };
 
 struct Node {
@@ -124,7 +122,7 @@ int findShortestPath(Node* handle, int source) {
 
     int* d = new int[length];
     for (int i = 0; i < length; i++) {
-        d[i] = INFINITY;
+        d[i] = INF;
     }
     d[source] = 0;
 
@@ -241,6 +239,7 @@ ProgCtx analyzeProg(const unsigned int opsLatency[], const InstInfo progTrace[],
         for (unsigned int edge = 0; edge < programCounter[i].dependencies.size(); edge++) {
             if (programCounter[i].dependencies[edge] == EMPTY) continue;
             Edge e;
+            e.param = edge + 1;
             e.source = i - 1;
             e.dest = programCounter[i].dependencies[edge] - 1;
             e.weight = programCounter[programCounter[i].dependencies[edge]].cycles;
@@ -266,6 +265,9 @@ void freeProgCtx(ProgCtx ctx) {
 
 int getInstDepth(ProgCtx ctx, unsigned int theInst) {
     Node* handle = (Node*)ctx;
+    int totalInst = handle[0].length;
+    if ((int)theInst >= totalInst - 2)
+        return -1;
 
     int pathLength = findShortestPath(handle, theInst + 1);
 
@@ -276,6 +278,8 @@ int getInstDepth(ProgCtx ctx, unsigned int theInst) {
 int getInstDeps(ProgCtx ctx, unsigned int theInst, int *src1DepInst, int *src2DepInst) {
     Node* handle = (Node*)ctx;
     int totalInst = handle[0].length;
+    if ((int)theInst >= totalInst - 2)
+        return -1;
 
     for (int i = 0; i < totalInst; i++) {
         if (handle[i].index == (int)theInst) {
@@ -284,8 +288,14 @@ int getInstDeps(ProgCtx ctx, unsigned int theInst, int *src1DepInst, int *src2De
                 *src2DepInst = -1;
             }
             if (handle[i].edges.size() == 1) {
-                *src1DepInst = handle[i].edges[0].dest;
-                *src2DepInst = -1;
+                if (handle[i].edges[0].param == 1) {
+                    *src1DepInst = handle[i].edges[0].dest;
+                    *src2DepInst = -1;
+                }
+                else {
+                    *src1DepInst = -1;
+                    *src2DepInst = handle[i].edges[0].dest;
+                }
             }
             if (handle[i].edges.size() == 2) {
                 *src1DepInst = handle[i].edges[0].dest;

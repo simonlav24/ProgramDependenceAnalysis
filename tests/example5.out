@@ -1,0 +1,42 @@
+ # ./dflow_calc example5.in u0 p0 p1 p2 p3 p4 p5 p6 p7 p8 p9 p10 p11 p12 p13 p14 u1 u2 u3 u4 u5 u6 u7 u8 u9 u10 u11 u12 u13 d0 d1 d2 d3 d4 d5 d6 d7 d8 d9 d10
+Reading the program file example5.in ... Found 15 instructions
+getInstUsers(0)==14: 1  2  3  4  5  6  7  8  9  10  11  12  13  14  
+getDepDepth(0)==0
+getDepDepth(1)==1
+getDepDepth(2)==1
+getDepDepth(3)==1
+getDepDepth(4)==1
+getDepDepth(5)==1
+getDepDepth(6)==1
+getDepDepth(7)==1
+getDepDepth(8)==1
+getDepDepth(9)==1
+getDepDepth(10)==1
+getDepDepth(11)==1
+getDepDepth(12)==1
+getDepDepth(13)==1
+getDepDepth(14)==1
+getInstUsers(1)==0: 
+getInstUsers(2)==0: 
+getInstUsers(3)==0: 
+getInstUsers(4)==0: 
+getInstUsers(5)==0: 
+getInstUsers(6)==0: 
+getInstUsers(7)==0: 
+getInstUsers(8)==0: 
+getInstUsers(9)==0: 
+getInstUsers(10)==0: 
+getInstUsers(11)==0: 
+getInstUsers(12)==0: 
+getInstUsers(13)==0: 
+getInstDeps(0)=={-1,-1}
+getInstDeps(1)=={0,-1}
+getInstDeps(2)=={0,-1}
+getInstDeps(3)=={-1,0}
+getInstDeps(4)=={-1,0}
+getInstDeps(5)=={-1,0}
+getInstDeps(6)=={-1,0}
+getInstDeps(7)=={0,-1}
+getInstDeps(8)=={0,-1}
+getInstDeps(9)=={0,-1}
+getInstDeps(10)=={-1,0}

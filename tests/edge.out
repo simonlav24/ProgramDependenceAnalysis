@@ -1,0 +1,15 @@
+# ./dflow_calc edgeScenarios.txt p0 p1 p2 p3 p10 u1 u2 u3 u5 d0 d1 d3 d10
+Reading the program file edgeScenarios.in ... Found 3 instructions
+getDepDepth(0)==0
+getDepDepth(1)==1
+getDepDepth(2)==2
+Error -1 for getDepDepth(3)
+Error -1 for getDepDepth(10)
+getInstUsers(1)==1: 2  
+getInstUsers(2)==0: 
+Error -1 for getInstUsers(3)
+Error -1 for getInstUsers(5)
+getInstDeps(0)=={-1,-1}
+getInstDeps(1)=={0,0}
+Error -1 for getInstDeps(3)
+Error -1 for getInstDeps(10)
