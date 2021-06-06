@@ -19,7 +19,7 @@ using std::endl;
 
 #define DEBUG if(debug) cout << "[DEBUG] " 
 
-bool debug = true;
+bool debug = false;
 
 class Instruction {
 public:
@@ -90,9 +90,10 @@ struct Node {
 };
 
 void printHandle(Node* handle) {
+    if (!debug) return;
     for (int i = 0; i < handle[0].length; i++) {
         cout << "node[" << i << "] index:" << handle[i].index << " edges:" << endl;
-        for (int e = 0; e < handle[i].edges.size(); e++) {
+        for (unsigned int e = 0; e < handle[i].edges.size(); e++) {
             cout << "(" << handle[i].edges[e].source << ", " << handle[i].edges[e].dest << ", " << handle[i].edges[e].weight << ")";
         }
         cout << endl;
@@ -109,6 +110,7 @@ void copyArr(int* arr1, int* arr2, int length) {
 
 //print arr
 void printArr(int* arr, int length) {
+    if (!debug) return;
     DEBUG;
     for (int i = 0; i < length; i++) {
         cout << arr[i] << " ";
@@ -134,7 +136,7 @@ int findShortestPath(Node* handle, int source) {
         //printArr(d_current, length);
         // iterate edges
         for (int i = 0; i < length; i++) {
-            for (int k = 0; k < handle[i].edges.size(); k++) {
+            for (unsigned int k = 0; k < handle[i].edges.size(); k++) {
                 Edge& edge = handle[i].edges[k];
                 //DEBUG << edge.source << " " << edge.dest << " " << edge.weight << endl;
                 // relaxation
@@ -236,7 +238,7 @@ ProgCtx analyzeProg(const unsigned int opsLatency[], const InstInfo progTrace[],
         Node n;
         n.index = i - 1;
         DEBUG << "size depen " << programCounter[i].dependencies.size() << endl;
-        for (int edge = 0; edge < programCounter[i].dependencies.size(); edge++) {
+        for (unsigned int edge = 0; edge < programCounter[i].dependencies.size(); edge++) {
             if (programCounter[i].dependencies[edge] == EMPTY) continue;
             Edge e;
             e.source = i - 1;
@@ -264,7 +266,6 @@ void freeProgCtx(ProgCtx ctx) {
 
 int getInstDepth(ProgCtx ctx, unsigned int theInst) {
     Node* handle = (Node*)ctx;
-    int totalInst = handle[0].length;
 
     int pathLength = findShortestPath(handle, theInst + 1);
 
@@ -277,7 +278,7 @@ int getInstDeps(ProgCtx ctx, unsigned int theInst, int *src1DepInst, int *src2De
     int totalInst = handle[0].length;
 
     for (int i = 0; i < totalInst; i++) {
-        if (handle[i].index == theInst) {
+        if (handle[i].index == (int)theInst) {
             if (handle[i].edges.size() == 0) {
                 *src1DepInst = -1;
                 *src2DepInst = -1;
